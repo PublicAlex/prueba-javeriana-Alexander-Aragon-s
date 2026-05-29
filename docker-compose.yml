@@ -6,9 +6,10 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - sqlite_data:/app
+      - sqlite_data:/app/data
     environment:
       - DJANGO_SETTINGS_MODULE=biblioteca_api.settings
+      - DJANGO_ALLOWED_HOSTS=*
       - PYTHONUNBUFFERED=1
 
   frontend:
