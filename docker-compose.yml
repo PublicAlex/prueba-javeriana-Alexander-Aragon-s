@@ -1,0 +1,23 @@
+# docker-compose.yml
+services:
+  backend:
+    build: ./backend
+    container_name: biblioteca-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - sqlite_data:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=biblioteca_api.settings
+      - PYTHONUNBUFFERED=1
+
+  frontend:
+    build: ./frontend
+    container_name: biblioteca-web
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  sqlite_data:

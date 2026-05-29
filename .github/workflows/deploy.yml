@@ -1,0 +1,36 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+    # runs-on: ubuntu-latest   # <-- cambia a esto si NO usas servidor propio
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Stop old containers
+        run: docker compose down --remove-orphans || true
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Verify backend
+        run: |
+          sleep 5
+          curl -sf http://localhost:8000/api/libros/ > /dev/null && echo "Backend OK" || echo "Backend FAIL"
+
+      - name: Verify frontend
+        run: |
+          curl -sf http://localhost/ > /dev/null && echo "Frontend OK" || echo "Frontend FAIL"
+
+      - name: Clean old images
+        run: docker image prune -f
