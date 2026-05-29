@@ -35,6 +35,21 @@
 - Uso de `transaction.atomic()` para asegurar que préstamo y decremento sean una operación indivisible.
 - Evita condiciones de carrera cuando dos usuarios toman el último ejemplar simultáneamente.
 
+### Contenedores: Docker Compose
+- Dos servicios: `backend` (Django + Gunicorn) y `frontend` (Nginx para SPA + proxy reverso).
+- Nginx proxy reverso: `/api/` → backend, resto → `index.html` (SPA).
+- Volumen Docker para persistir SQLite entre reinicios.
+
+### CI/CD: GitHub Actions + Self-Hosted Runner
+- Workflow se ejecuta en cada `git push` a `main`.
+- Runner self-hosted en Azure VM (Ubuntu) — gratuito e ilimitado.
+- Pipeline: build imágenes → down contenedores viejos → up nuevos → verificación → limpieza.
+
+### Infraestructura: Azure VM
+- Servidor Ubuntu con Docker y Docker Compose.
+- DNS gratuito via DuckDNS (`mibiblioteca.duckdns.org`).
+- Firewall: puertos 80 y 8000 abiertos en Azure Network Security Group.
+
 ---
 
 ## Herramientas de IA Utilizadas
@@ -71,8 +86,10 @@
 |--------|----------------|-----------|
 | Autenticación y autorización (JWT) | 3 h | Alta |
 | Paginación en listados | 1 h | Media |
-| Dockerización (Dockerfile + docker-compose) | 2 h | Media |
+| Dockerización (Dockerfile + docker-compose) | 2 h | ✅ Completado |
 | Frontend web (React) | 8 h | ✅ Completado |
+| CI/CD (GitHub Actions + self-hosted runner) | 2 h | ✅ Completado |
+| Despliegue en Azure VM + DuckDNS | 1 h | ✅ Completado |
 | Documentación automática (Swagger/OpenAPI con drf-spectacular) | 1 h | Baja |
 | CI/CD (GitHub Actions: lint + test) | 2 h | Media |
 | Rate limiting | 1 h | Baja |
@@ -82,4 +99,4 @@
 | Endpoint para historial de préstamos por usuario | 2 h | Media |
 | Notificaciones de vencimiento (email) | 4 h | Baja |
 
-**Total estimado:** ~29 horas adicionales para una versión completa y lista para producción.
+**Total estimado:** ~24 horas adicionales para una versión completa y lista para producción.

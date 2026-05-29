@@ -1,20 +1,28 @@
 # Sistema de Gestión de Préstamos Bibliotecarios
 
 API REST + Frontend React para gestionar préstamos de libros en una biblioteca universitaria.
+Desplegado en Azure VM con CI/CD automatizado vía GitHub Actions.
+
+## Enlaces
+
+| Servicio | URL |
+|----------|-----|
+| Frontend | `http://20.213.19.46:80` o `http://mibiblioteca.duckdns.org` |
+| API directa | `http://20.213.19.46:8000/api/libros/` |
 
 ## Estructura del proyecto
 
 ```
 prueba javeriana/
-├── backend/                    # Django REST API
+├── backend/                    # Django REST API (Python)
 │   ├── biblioteca_api/         # Configuración del proyecto Django
-│   ├── prestamos/              # App principal
+│   ├── prestamos/              # App principal (models, services, views, tests)
 │   ├── manage.py
 │   ├── Dockerfile
 │   └── requirements.txt
-├── frontend/                   # React + Vite
+├── frontend/                   # React + Vite (Node.js)
 │   ├── src/
-│   │   ├── api.js
+│   │   ├── api.js              # Cliente HTTP
 │   │   ├── App.jsx / App.css
 │   │   ├── BookList.jsx
 │   │   ├── BookAvailability.jsx
@@ -25,6 +33,7 @@ prueba javeriana/
 │   └── nginx.conf
 ├── .github/workflows/deploy.yml
 ├── docker-compose.yml
+├── .gitignore
 ├── 01-arquitectura.md
 ├── 02-decisiones-tecnicas.md
 └── README.md
@@ -36,32 +45,18 @@ prueba javeriana/
 - Node.js 18+
 - pip
 
-## Instalación y ejecución
+## Instalación y ejecución local
 
 ### Backend
 
 ```bash
 cd backend
-
-# Crear entorno virtual
 python -m venv venv
-
-# Activar (Windows)
-venv\Scripts\activate
-
-# Activar (Linux/Mac)
-source venv/bin/activate
-
-# Instalar dependencias
+venv\Scripts\activate      # Windows
+source venv/bin/activate    # Linux/Mac
 pip install -r requirements.txt
-
-# Ejecutar migraciones
 python manage.py migrate
-
-# Cargar datos de ejemplo
 python manage.py seed_data
-
-# Iniciar servidor
 python manage.py runserver
 ```
 
@@ -73,22 +68,16 @@ npm install
 npm run dev
 ```
 
-El frontend corre en `http://localhost:5173` y el backend en `http://localhost:8000`. Las llamadas a `/api/*` desde el frontend se redirigen automáticamente al backend vía proxy de Vite.
+El frontend corre en `http://localhost:5173` y el backend en `http://localhost:8000`.
+Las llamadas a `/api/*` se redirigen automáticamente vía proxy de Vite.
 
-### Docker
+### Docker (local o servidor)
 
 ```bash
-# Construir e iniciar ambos servicios
 docker compose up -d
-
-# Ver logs
-docker compose logs -f
-
-# Detener
-docker compose down
+# App en http://localhost
+# API en http://localhost:8000
 ```
-
-La app completa estará disponible en `http://localhost` (frontend) y `http://localhost:8000` (API directa).
 
 ## Endpoints de la API
 
@@ -100,25 +89,14 @@ La app completa estará disponible en `http://localhost` (frontend) y `http://lo
 | `POST`   | `/api/prestamos/<id>/devolver/`    | Devolver un libro |
 | `GET`    | `/api/prestamos/vencidos/`         | Listar préstamos vencidos |
 
-### Ejemplos con curl
+### Ejemplos
 
 ```bash
-# Consultar disponibilidad
-curl http://localhost:8000/api/libros/9780134685991/disponibilidad/
-
-# Listar libros
-curl http://localhost:8000/api/libros/
-
-# Registrar préstamo
-curl -X POST http://localhost:8000/api/prestamos/ \
+curl http://20.213.19.46:8000/api/libros/
+curl http://20.213.19.46:8000/api/libros/9780134685991/disponibilidad/
+curl -X POST http://20.213.19.46:8000/api/prestamos/ \
   -H "Content-Type: application/json" \
   -d '{"isbn": "9780134685991", "identificacion_usuario": "12345", "fecha_vencimiento": "2026-06-15"}'
-
-# Devolver libro
-curl -X POST http://localhost:8000/api/prestamos/1/devolver/
-
-# Listar vencidos
-curl http://localhost:8000/api/prestamos/vencidos/
 ```
 
 ## Tests
@@ -130,19 +108,32 @@ pytest
 
 ## CI/CD
 
-El repositorio incluye un workflow de GitHub Actions (`.github/workflows/deploy.yml`) que:
+El repositorio incluye un workflow de GitHub Actions (`.github/workflows/deploy.yml`) que se ejecuta automáticamente en cada `git push` a `main`:
 
-1. Construye las imágenes Docker del backend y frontend.
-2. Detiene los contenedores anteriores.
-3. Inicia los nuevos contenedores.
-4. Verifica que backend y frontend respondan correctamente.
+1. **Checkout** del código en el servidor vía self-hosted runner
+2. **`docker compose build`** — construye las imágenes (backend Django + frontend React)
+3. **`docker compose down`** — detiene contenedores anteriores
+4. **`docker compose up -d`** — levanta los nuevos contenedores
+5. **Verificación** — `curl` a los endpoints para confirmar que responden
+6. **Limpieza** — `docker image prune` elimina imágenes viejas
 
-**Runner:** Configurado como `self-hosted` para desplegar en tu servidor Ubuntu (los self-hosted runners de GitHub Actions son **gratuitos e ilimitados**). Si prefieres usar runners de GitHub, cambia a `runs-on: ubuntu-latest`.
+**Runner:** Self-hosted en Azure VM (Ubuntu). Los self-hosted runners de GitHub Actions son **gratuitos e ilimitados** en minutos y paralelismo.
+
+## Infraestructura
+
+| Componente | Detalle |
+|------------|---------|
+| Servidor | Azure Virtual Machine (Ubuntu) |
+| IP Pública | `20.213.19.46` |
+| DNS | `mibiblioteca.duckdns.org` (DuckDNS, gratuito) |
+| Contenedores | Docker Compose (backend + frontend) |
+| Frontend | Nginx (servir SPA + proxy reverso `/api/`) |
+| Backend | Gunicorn + Django (4 workers) |
+| Base de datos | SQLite (montado en volumen Docker) |
+| CI/CD | GitHub Actions + self-hosted runner |
+| Puertos abiertos | 80 (HTTP), 8000 (API directa) |
 
 ## Documentos de Diseño
 
 - [`01-arquitectura.md`](01-arquitectura.md) — Arquitectura, modelo de datos, flujos
 - [`02-decisiones-tecnicas.md`](02-decisiones-tecnicas.md) — Decisiones técnicas, uso de IA y mejoras pendientes
-"# prueba-javeriana-Alexander-Aragon-s" 
-
-

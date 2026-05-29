@@ -1,0 +1,8 @@
+# Docker
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.sqlite3
+.git/
+.gitignore
+README.md
