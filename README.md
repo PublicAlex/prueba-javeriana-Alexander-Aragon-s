@@ -144,3 +144,5 @@ El repositorio incluye un workflow de GitHub Actions (`.github/workflows/deploy.
 - [`01-arquitectura.md`](01-arquitectura.md) — Arquitectura, modelo de datos, flujos
 - [`02-decisiones-tecnicas.md`](02-decisiones-tecnicas.md) — Decisiones técnicas, uso de IA y mejoras pendientes
 "# prueba-javeriana-Alexander-Aragon-s" 
+
+
