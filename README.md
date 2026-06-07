@@ -12,6 +12,8 @@ Desplegado en Azure VM con CI/CD automatizado vía GitHub Actions.
 
 ## Estructura del proyecto
 
+
+
 ```
 prueba javeriana/
 ├── backend/                    # Django REST API (Python)
